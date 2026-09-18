@@ -1,0 +1,62 @@
+services:
+  # ==================== 向量数据库（必需）====================
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: psychelink-chromadb
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== MySQL（可选，默认使用内嵌 H2）====================
+  # 启动：docker compose --profile mysql up -d
+  mysql:
+    image: mysql:8.0
+    container_name: psychelink-mysql
+    restart: unless-stopped
+    profiles: ["mysql"]
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 .env 中设置 MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: psychelink
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # ==================== Ollama（可选，本地 LLM 探索）====================
+  # 启动：docker compose --profile local-llm up -d
+  ollama:
+    image: ollama/ollama:latest
+    container_name: psychelink-ollama
+    restart: unless-stopped
+    profiles: ["local-llm"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # GPU 支持: 如有 NVIDIA GPU 取消下方注释
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  chroma_data:
+    driver: local
+  mysql_data:
+    driver: local
+  ollama_data:
+    driver: local
