@@ -16,7 +16,7 @@ if [ -z "$OTEL_EXPORTER_ENDPOINT" ]; then
     echo "[WARN] 未设置 OTEL_EXPORTER_ENDPOINT，将不启用 OTel 上报，仅本地启动"
 fi
 
-JAR="target/psychelink-0.1.0-SNAPSHOT.jar"
+JAR="target/psychelink-0.2.0-SNAPSHOT.jar"
 if [ ! -f "$JAR" ]; then
     echo "[INFO] 未找到 $JAR，先执行打包"
     ./mvnw clean package -DskipTests

@@ -10,35 +10,34 @@
 	</parent>
 	<groupId>io.github.charlsoliver</groupId>
 	<artifactId>psychelink</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.2.0-SNAPSHOT</version>
 	<name>PsycheLink</name>
 	<description>PsycheLink - 心理健康 AI 陪伴助手：意图识别 + RAG 检索增强 + 风险预警</description>
 	<properties>
 		<java.version>17</java.version>
-		<spring-ai.version>1.0.0-M4</spring-ai.version>
+		<spring-ai.version>1.0.0</spring-ai.version>
+		<jjwt.version>0.12.6</jjwt.version>
+		<milvus-sdk.version>2.5.4</milvus-sdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 		<!-- Spring Boot -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -64,6 +63,16 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
+		<!-- Spring AI: OpenAI 兼容模型（智谱 GLM）+ MCP Server -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-model-openai</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+		</dependency>
+
 		<!-- OpenTelemetry Instrumentation Annotations -->
 		<dependency>
 			<groupId>io.opentelemetry.instrumentation</groupId>
@@ -71,11 +80,30 @@
 			<version>2.1.0</version>
 		</dependency>
 
-		<!-- SpringAI OpenAI (兼容智谱GLM) -->
+		<!-- Milvus 向量数据库 -->
 		<dependency>
-			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-openai-spring-boot-starter</artifactId>
-			<version>${spring-ai.version}</version>
+			<groupId>io.milvus</groupId>
+			<artifactId>milvus-sdk-java</artifactId>
+			<version>${milvus-sdk.version}</version>
+		</dependency>
+
+		<!-- JWT -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 
 		<!-- H2 内嵌数据库 -->
@@ -103,6 +131,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

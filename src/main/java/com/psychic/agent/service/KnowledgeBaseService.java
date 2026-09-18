@@ -11,22 +11,30 @@ import java.io.InputStream;
 import java.util.*;
 
 /**
- * 知识库服务 - RAG 检索与生成
+ * 知识库服务：知识入库管线（加载 → 文档化 → 向量化 → 写入 Milvus）与 RAG 检索
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class KnowledgeBaseService {
 
+    private static final int TOP_K = 3;
+
     private final EmbeddingService embeddingService;
-    private final ChromaService chromaService;
+    private final MilvusVectorStore milvusVectorStore;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * 启动时从 knowledge_base.json 导入知识库（已有数据则跳过）
+     */
     public int initializeFromJson() {
         try {
-            chromaService.initialize();
-            if (chromaService.count() > 0) {
-                log.info("Chroma 已有数据，跳过初始化导入。当前条目数: {}", chromaService.count());
+            if (!milvusVectorStore.isAvailable()) {
+                log.warn("Milvus 不可用，跳过知识库导入");
+                return 0;
+            }
+            if (milvusVectorStore.count() > 0) {
+                log.info("Milvus 已有知识库数据，跳过导入。当前条目数: {}", milvusVectorStore.count());
                 return 0;
             }
 
@@ -41,31 +49,20 @@ public class KnowledgeBaseService {
     }
 
     /**
-     * 检索相关知识（基于向量检索）
+     * RAG 检索：查询向量化 → Milvus HNSW Top-K → 拼接为上下文
      */
     public String retrieve(String query) {
-        if (query == null || query.isBlank()) {
-            return "";
-        }
-        // ChromaDB 不可用时跳过 RAG
-        if (!chromaService.isAvailable()) {
-            log.debug("ChromaDB 不可用，跳过向量检索");
+        if (query == null || query.isBlank() || !milvusVectorStore.isAvailable()) {
             return "";
         }
         try {
             List<Float> queryEmbedding = embeddingService.embed(query);
-            List<Map<String, Object>> results = chromaService.querySimilar(queryEmbedding, 3);
-            StringBuilder context = new StringBuilder();
-            for (Map<String, Object> item : results) {
-                String document = String.valueOf(item.getOrDefault("document", ""));
-                if (!document.isBlank()) {
-                    if (!context.isEmpty()) {
-                        context.append("\n\n");
-                    }
-                    context.append(document);
-                }
+            if (queryEmbedding.isEmpty()) {
+                log.warn("查询向量化失败，跳过 RAG 检索");
+                return "";
             }
-            return context.toString();
+            List<String> results = milvusVectorStore.search(queryEmbedding, TOP_K);
+            return String.join("\n\n", results);
         } catch (Exception e) {
             log.error("向量检索失败: {}", e.getMessage(), e);
             return "";
@@ -73,37 +70,14 @@ public class KnowledgeBaseService {
     }
 
     /**
-     * 构建知识库索引（当前项目保留空实现，避免破坏接口）
-     */
-    public void buildIndex(String content, String metadata) {
-        log.debug("buildIndex 调用: contentLength={}, metadata={}", content != null ? content.length() : 0, metadata);
-    }
-
-    /**
-     * 添加问答对到知识库
-     */
-    public void addQA(String question, String answer, String category, String riskLevel, String source) {
-        List<Map<String, String>> singleton = new ArrayList<>();
-        Map<String, String> item = new HashMap<>();
-        item.put("question", question);
-        item.put("answer", answer);
-        item.put("category", category);
-        item.put("riskLevel", riskLevel);
-        item.put("source", source);
-        singleton.add(item);
-        addQABatch(singleton);
-    }
-
-    /**
-     * 批量添加问答对到知识库
+     * 批量导入问答对：Q/A 拼接为文档 → 向量化 → 写入 Milvus
      */
     public int addQABatch(List<Map<String, String>> qaList) {
-        if (qaList == null || qaList.isEmpty()) {
+        if (qaList == null || qaList.isEmpty() || !milvusVectorStore.isAvailable()) {
             return 0;
         }
         List<String> ids = new ArrayList<>();
         List<String> documents = new ArrayList<>();
-        List<Map<String, Object>> metadatas = new ArrayList<>();
         List<List<Float>> embeddings = new ArrayList<>();
 
         int index = 0;
@@ -114,18 +88,17 @@ public class KnowledgeBaseService {
                 continue;
             }
             String document = "Q: " + question + "\nA: " + answer;
-            ids.add("kb-" + System.currentTimeMillis() + "-" + index);
+            List<Float> embedding = embeddingService.embed(document);
+            if (embedding.isEmpty()) {
+                log.warn("第 {} 条知识向量化失败，跳过", index);
+                continue;
+            }
+            ids.add("kb-" + UUID.randomUUID());
             documents.add(document);
-            embeddings.add(embeddingService.embed(document));
-            Map<String, Object> metadata = new HashMap<>();
-            metadata.put("question", question);
-            metadata.put("category", qa.getOrDefault("category", "general"));
-            metadata.put("riskLevel", qa.getOrDefault("riskLevel", "UNKNOWN"));
-            metadata.put("source", qa.getOrDefault("source", "knowledge_base.json"));
-            metadatas.add(metadata);
+            embeddings.add(embedding);
             index++;
         }
-        chromaService.addDocuments(ids, documents, metadatas, embeddings);
+        milvusVectorStore.insert(ids, documents, embeddings);
         return ids.size();
     }
 

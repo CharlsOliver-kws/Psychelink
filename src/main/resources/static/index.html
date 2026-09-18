@@ -44,11 +44,12 @@
             border-radius: 20px;
             cursor: pointer;
         }
-        .login-form {
-            padding: 30px;
+        .auth-form {
+            padding: 40px 30px;
             text-align: center;
         }
-        .login-form input {
+        .auth-form h2 { margin-bottom: 20px; color: #333; }
+        .auth-form input {
             width: 100%;
             padding: 12px 20px;
             margin: 10px 0;
@@ -57,11 +58,11 @@
             font-size: 1rem;
             transition: border-color 0.3s;
         }
-        .login-form input:focus {
+        .auth-form input:focus {
             outline: none;
             border-color: #667eea;
         }
-        .login-form button {
+        .auth-form button {
             width: 100%;
             padding: 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -72,11 +73,22 @@
             cursor: pointer;
             transition: transform 0.2s;
         }
-        .login-form button:hover { transform: scale(1.02); }
+        .auth-form button:hover { transform: scale(1.02); }
+        .auth-switch {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .auth-switch a { color: #667eea; cursor: pointer; text-decoration: none; }
+        .auth-error {
+            color: #e53e3e;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            min-height: 1.2em;
+        }
         .chat-area {
             display: none;
-            height: 500px;
-            display: flex;
+            height: 560px;
             flex-direction: column;
         }
         .messages {
@@ -91,6 +103,8 @@
             border-radius: 15px;
             max-width: 80%;
             animation: fadeIn 0.3s ease;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -160,19 +174,24 @@
             <button class="logout" onclick="logout()">退出</button>
         </div>
 
-        <!-- 登录表单 -->
-        <div class="login-form" id="loginForm">
-            <h2 style="margin-bottom: 20px; color: #333;">用户登录</h2>
-            <input type="text" id="username" placeholder="用户名">
-            <input type="password" id="password" placeholder="密码">
-            <button onclick="login()">开始聊天</button>
+        <!-- 登录 / 注册 -->
+        <div class="auth-form" id="authForm">
+            <h2 id="authTitle">用户登录</h2>
+            <input type="text" id="username" placeholder="用户名" autocomplete="username">
+            <input type="password" id="password" placeholder="密码" autocomplete="current-password">
+            <input type="email" id="email" placeholder="邮箱（注册时可选）" style="display:none">
+            <button id="authBtn" onclick="submitAuth()">开始聊天</button>
+            <div class="auth-error" id="authError"></div>
+            <div class="auth-switch" id="authSwitch">
+                还没有账号？<a onclick="toggleAuthMode()">注册一个</a>
+            </div>
         </div>
 
         <!-- 聊天区域 -->
-        <div class="chat-area" id="chatArea" style="display: none;">
-            <div class="status" id="status">当前使用：智谱 GLM-4.5</div>
+        <div class="chat-area" id="chatArea">
+            <div class="status">当前使用：智谱 GLM-4.5 · 流式响应</div>
             <div class="messages" id="messages"></div>
-            <div class="typing" id="typing" style="display: none;">AI 正在输入...</div>
+            <div class="typing" id="typing" style="display: none;">肉包正在输入...</div>
             <div class="input-area">
                 <input type="text" id="messageInput" placeholder="输入您想说的话..." onkeypress="handleKeyPress(event)">
                 <button onclick="sendMessage()" id="sendBtn">发送</button>
@@ -181,37 +200,95 @@
     </div>
 
     <script>
-        let token = localStorage.getItem('token') || '';
+        let token = sessionStorage.getItem('token') || '';
+        let currentUser = sessionStorage.getItem('username') || '';
         let isStreaming = false;
+        let isRegisterMode = false;
 
-        async function login() {
-            const username = document.getElementById('username').value;
+        // ---------- 认证 ----------
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('authTitle').textContent = isRegisterMode ? '注册账号' : '用户登录';
+            document.getElementById('authBtn').textContent = isRegisterMode ? '注册并开始聊天' : '开始聊天';
+            document.getElementById('email').style.display = isRegisterMode ? 'block' : 'none';
+            document.getElementById('authSwitch').innerHTML = isRegisterMode
+                ? '已有账号？<a onclick="toggleAuthMode()">去登录</a>'
+                : '还没有账号？<a onclick="toggleAuthMode()">注册一个</a>';
+            document.getElementById('authError').textContent = '';
+        }
+
+        async function submitAuth() {
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value.trim();
+            const errorEl = document.getElementById('authError');
+            errorEl.textContent = '';
 
-            if (username && password) {
-                token = btoa(username + ':' + password);
-                localStorage.setItem('token', token);
-                localStorage.setItem('username', username);
-                showChat();
+            if (!username || !password) {
+                errorEl.textContent = '请输入用户名和密码';
+                return;
+            }
+            if (isRegisterMode && password.length < 6) {
+                errorEl.textContent = '密码至少 6 位';
+                return;
+            }
+
+            const path = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
+            const body = isRegisterMode
+                ? { username, password, email: email || null }
+                : { username, password };
+
+            try {
+                const response = await fetch(path, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    errorEl.textContent = result.error || '操作失败，请重试';
+                    return;
+                }
+                token = result.token;
+                currentUser = result.username;
+                sessionStorage.setItem('token', token);
+                sessionStorage.setItem('username', currentUser);
+                enterChat();
+            } catch (e) {
+                errorEl.textContent = '网络错误，请确认后端服务已启动';
             }
         }
 
         function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('username');
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('username');
             token = '';
-            document.getElementById('loginForm').style.display = 'block';
+            currentUser = '';
+            document.getElementById('authForm').style.display = 'block';
             document.getElementById('chatArea').style.display = 'none';
         }
 
-        function showChat() {
-            document.getElementById('loginForm').style.display = 'none';
+        // ---------- 聊天 ----------
+        async function enterChat() {
+            document.getElementById('authForm').style.display = 'none';
             document.getElementById('chatArea').style.display = 'flex';
+            document.getElementById('messageInput').focus();
 
-            // 普通的聊天欢迎语，不透露心理内容
             addMessage('ai', '您好！我是肉包。\n\n我可以陪您聊天、回答问题、学习知识等。\n有什么我可以帮您的吗？');
 
-            document.getElementById('messageInput').focus();
+            // 加载历史对话
+            try {
+                const response = await fetch('/api/chat/history?limit=20', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (response.ok) {
+                    const history = await response.json();
+                    history.forEach(m => {
+                        if (m.userMessage) addMessage('user', m.userMessage);
+                        if (m.aiResponse) addMessage('ai', m.aiResponse);
+                    });
+                }
+            } catch (e) { /* 历史加载失败不阻断聊天 */ }
         }
 
         function handleKeyPress(e) {
@@ -239,32 +316,43 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Basic ' + token
+                        'Authorization': 'Bearer ' + token
                     },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ message })
                 });
 
+                if (response.status === 401) {
+                    logout();
+                    addMessage('ai', '登录已过期，请重新登录。');
+                    return;
+                }
                 if (!response.ok) {
-                    throw new Error('请求失败: ' + response.status);
+                    throw new Error('HTTP ' + response.status);
                 }
 
-                // 解析响应（非流式，可能是纯文本或JSON）
-                const contentType = response.headers.get('content-type');
-                let aiReply = '';
+                // 流式读取 SSE：每个 data: 行为一个 Token 片段
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                const aiDiv = createStreamingMessage();
+                let buffer = '';
 
-                if (contentType && contentType.includes('application/json')) {
-                    const result = await response.json();
-                    aiReply = result;
-                } else {
-                    aiReply = await response.text();
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // 末行可能不完整，留在缓冲区
+                    for (const line of lines) {
+                        if (line.startsWith('data:')) {
+                            const chunk = line.slice(5);
+                            if (chunk) appendToMessage(aiDiv, chunk);
+                        }
+                    }
                 }
-
-                if (aiReply && aiReply.trim()) {
-                    addMessage('ai', aiReply);
-                } else {
-                    addMessage('ai', '抱歉，AI 未返回内容');
+                if (!aiDiv.textContent) {
+                    appendToMessage(aiDiv, '（未收到回复）');
                 }
-
             } catch (error) {
                 addMessage('ai', '抱歉，服务暂时不可用。请确保后端服务已启动。');
             } finally {
@@ -274,12 +362,23 @@
             }
         }
 
+        // ---------- 渲染（textContent 防 XSS） ----------
         function addMessage(type, content) {
             const messages = document.getElementById('messages');
             const div = document.createElement('div');
             div.className = 'message ' + type;
-            div.innerHTML = `<div class="content">${content.replace(/\n/g, '<br>')}</div>`;
+            div.textContent = content;
             messages.appendChild(div);
+            scrollToBottom();
+            return div;
+        }
+
+        function createStreamingMessage() {
+            return addMessage('ai', '');
+        }
+
+        function appendToMessage(div, chunk) {
+            div.textContent += chunk;
             scrollToBottom();
         }
 
@@ -289,9 +388,9 @@
         }
 
         // 页面加载时检查登录状态
-        window.onload = function() {
+        window.onload = function () {
             if (token) {
-                showChat();
+                enterChat();
             }
         };
     </script>

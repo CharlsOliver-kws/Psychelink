@@ -48,6 +48,13 @@ id_rsa*
 deploy/
 *.log
 
+### ML training artifacts（模型体积大且可能含隐私数据，不入库）###
+training/data/raw/
+training/checkpoints/
+*.bin
+*.safetensors
+*.pth
+
 ### OS ###
 .DS_Store
 Thumbs.db

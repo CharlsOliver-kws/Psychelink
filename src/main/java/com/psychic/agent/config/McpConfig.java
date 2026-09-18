@@ -1,18 +1,23 @@
 package com.psychic.agent.config;
 
+import com.psychic.agent.service.McpEmailService;
+import com.psychic.agent.service.McpExcelService;
+import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.tool.method.MethodToolCallbackProvider;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 工具开关配置（预警收件人等外部配置见 application.properties / 环境变量）
+ * MCP Server 配置：将邮件预警与 Excel 台账工具通过 MCP 协议暴露，
+ * 供 Claude Desktop 等外部 MCP 客户端复用（见 docs/architecture.md）
  */
 @Configuration
 public class McpConfig {
 
-    public boolean isExcelEnabled() {
-        return true;
-    }
-
-    public boolean isEmailEnabled() {
-        return true;
+    @Bean
+    public ToolCallbackProvider psychelinkTools(McpEmailService emailService, McpExcelService excelService) {
+        return MethodToolCallbackProvider.builder()
+                .toolObjects(emailService, excelService)
+                .build();
     }
 }

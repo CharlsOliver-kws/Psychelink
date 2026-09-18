@@ -6,15 +6,21 @@
 
 - JDK 17
 - Maven 3.8+（仓库自带 mvnw wrapper）
-- Docker（用于启动 ChromaDB）
+- Docker（用于启动 Milvus 向量数据库）
 
 ## 本地启动
 
 ```bash
-docker compose up -d chromadb
+docker compose up -d
 cp .env.example .env   # 填入你的 API Key
 set -a; source .env; set +a   # Windows 下可用 IDEA 运行配置注入环境变量
 ./mvnw spring-boot:run
+```
+
+## 运行测试
+
+```bash
+./mvnw test    # 无需外部依赖（Milvus / LLM 不可用时自动走降级路径）
 ```
 
 ## PR 要求

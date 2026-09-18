@@ -1,72 +1,72 @@
 package com.psychic.agent.service;
 
+import com.psychic.agent.entity.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import java.time.Duration;
-import java.util.Arrays;
+
 import java.util.List;
-import java.util.Map;
 
 /**
- * 心理状态识别服务 - 意图判断与风险评估
+ * 心理状态识别服务：意图三分类（CHAT/CONSULT/RISK）+ 风险四级评估（NONE/LOW/MEDIUM/HIGH）
+ *
+ * 分类链路：高风险关键词前置兜底 → LLM 分类 → 解析失败时回退关键词规则，
+ * 保证任何情况下 RISK 不会被漏判为 CHAT（安全优先，宁可误报）。
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PsychologicalService {
 
-    private final WebClient webClient;
-    private static final List<String> HIGH_RISK_KEYWORDS = Arrays.asList(
+    private final ChatClient chatClient;
+
+    private static final List<String> HIGH_RISK_KEYWORDS = List.of(
             "自杀", "自残", "想死", "不想活", "结束生命", "活着没意义", "割腕", "跳楼", "服毒", "轻生"
+    );
+    private static final List<String> CONSULT_KEYWORDS = List.of(
+            "心情", "难过", "抑郁", "焦虑", "痛苦", "失眠", "压力", "绝望", "害怕", "孤独", "崩溃"
     );
 
     /**
-     * 意图判别 - CHAT/CONSULT/RISK
+     * 意图判别
      */
-    public String detectIntent(String message) {
+    public ChatMessage.MessageIntent detectIntent(String message) {
         if (hasHighRiskSignal(message)) {
-            return "RISK";
+            return ChatMessage.MessageIntent.RISK;
         }
         try {
-            String result = callAi("请判断用户消息的意图，返回一个词：CHAT表示普通闲聊/日常问题/问食物等，CONSULT表示明确的心理咨询/情绪问题/抑郁相关，RISK表示自杀/自残等危险想法。只需返回一个词。", "消息: " + message);
-            result = result.trim().toUpperCase();
-            if (result.contains("RISK")) return "RISK";
-            if (result.contains("CONSULT")) return "CONSULT";
-            return "CHAT";
+            String result = chatClient.prompt()
+                    .system("请判断用户消息的意图，返回一个词：CHAT表示普通闲聊/日常问题，"
+                            + "CONSULT表示明确的心理咨询/情绪问题，RISK表示自杀/自残等危险想法。只需返回一个词。")
+                    .user("消息: " + message)
+                    .call()
+                    .content();
+            return parseIntent(result);
         } catch (Exception e) {
-            log.warn("Intent detection failed, using rules: {}", e.getMessage());
-            if (hasHighRiskSignal(message)) {
-                return "RISK";
-            }
-            // 增强规则：覆盖更多心理咨询相关的关键词
-            if (message.contains("心情") || message.contains("难过") || message.contains("抑郁")
-                || message.contains("焦虑") || message.contains("痛苦") || message.contains("失眠")
-                || message.contains("压力") || message.contains("绝望") || message.contains("害怕")) {
-                return "CONSULT";
-            }
-            return "CHAT";
+            log.warn("LLM 意图识别失败，回退关键词规则: {}", e.getMessage());
+            return fallbackIntent(message);
         }
     }
 
     /**
      * 风险评估
      */
-    public String assessRisk(String message) {
+    public ChatMessage.RiskLevel assessRisk(String message) {
         if (hasHighRiskSignal(message)) {
-            return "HIGH";
+            return ChatMessage.RiskLevel.HIGH;
         }
         try {
-            String result = callAi("Assess risk level: NONE, LOW, MEDIUM, or HIGH. Return only one word.", "Message: " + message);
-            result = result.trim().toUpperCase();
-            if (result.contains("HIGH")) return "HIGH";
-            if (result.contains("MEDIUM")) return "MEDIUM";
-            if (result.contains("LOW")) return "LOW";
-            return "NONE";
+            String result = chatClient.prompt()
+                    .system("评估用户消息的心理风险等级，返回一个词：NONE（无风险）、LOW（轻度情绪困扰）、"
+                            + "MEDIUM（明显痛苦需要关注）、HIGH（自伤/自杀危机）。只需返回一个词。")
+                    .user("消息: " + message)
+                    .call()
+                    .content();
+            return parseRisk(result);
         } catch (Exception e) {
-            log.warn("Risk assessment failed: {}", e.getMessage());
-            return "LOW";
+            log.warn("LLM 风险评估失败，回退规则: {}", e.getMessage());
+            return hasHighRiskSignal(message) ? ChatMessage.RiskLevel.HIGH : ChatMessage.RiskLevel.LOW;
         }
     }
 
@@ -77,30 +77,57 @@ public class PsychologicalService {
         return HIGH_RISK_KEYWORDS.stream().anyMatch(message::contains);
     }
 
-    private String callAi(String systemPrompt, String userMessage) {
-        Map<String, Object> requestBody = Map.of(
-            "model", "glm-4.5-air",
-            "messages", List.of(
-                Map.of("role", "system", "content", systemPrompt),
-                Map.of("role", "user", "content", userMessage)
-            )
-        );
-
-        Map<?, ?> response = webClient.post()
-            .uri("/chat/completions")
-            .bodyValue(requestBody)
-            .retrieve()
-            .bodyToMono(Map.class)
-            .timeout(Duration.ofSeconds(60))
-            .block();
-
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-        if (choices != null && !choices.isEmpty()) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
-            return (String) msg.get("content");
+    /**
+     * 解析 LLM 意图输出（包内可见，便于单测）
+     */
+    static ChatMessage.MessageIntent parseIntent(String llmOutput) {
+        if (llmOutput == null) {
+            return ChatMessage.MessageIntent.CHAT;
         }
-        return "";
+        String normalized = llmOutput.trim().toUpperCase();
+        if (normalized.contains("RISK")) {
+            return ChatMessage.MessageIntent.RISK;
+        }
+        if (normalized.contains("CONSULT")) {
+            return ChatMessage.MessageIntent.CONSULT;
+        }
+        return ChatMessage.MessageIntent.CHAT;
+    }
+
+    /**
+     * 解析 LLM 风险输出（包内可见，便于单测）
+     */
+    static ChatMessage.RiskLevel parseRisk(String llmOutput) {
+        if (llmOutput == null) {
+            return ChatMessage.RiskLevel.NONE;
+        }
+        String normalized = llmOutput.trim().toUpperCase();
+        if (normalized.contains("HIGH")) {
+            return ChatMessage.RiskLevel.HIGH;
+        }
+        if (normalized.contains("MEDIUM")) {
+            return ChatMessage.RiskLevel.MEDIUM;
+        }
+        if (normalized.contains("LOW")) {
+            return ChatMessage.RiskLevel.LOW;
+        }
+        return ChatMessage.RiskLevel.NONE;
+    }
+
+    static ChatMessage.MessageIntent fallbackIntent(String message) {
+        if (hasHighRiskSignalStatic(message)) {
+            return ChatMessage.MessageIntent.RISK;
+        }
+        if (message != null && CONSULT_KEYWORDS.stream().anyMatch(message::contains)) {
+            return ChatMessage.MessageIntent.CONSULT;
+        }
+        return ChatMessage.MessageIntent.CHAT;
+    }
+
+    static boolean hasHighRiskSignalStatic(String message) {
+        if (message == null || message.isBlank()) {
+            return false;
+        }
+        return HIGH_RISK_KEYWORDS.stream().anyMatch(message::contains);
     }
 }

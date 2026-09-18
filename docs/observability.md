@@ -13,7 +13,7 @@ PsycheLink → OTel Java Agent → OTLP Endpoint（聚合层 / Collector / Langf
 | Span 名 | 位置 | 覆盖环节 |
 |---|---|---|
 | `prompt_assembly` | `ChatService` | Prompt 组装 |
-| `rag` | `ChromaService` | 知识库向量检索 |
+| `rag` | `KnowledgeBaseService` | 知识库向量检索 |
 | `mcp_excel` | `McpExcelService` | 风险记录落盘 |
 | `mcp_email` | `McpEmailService` | 预警邮件发送 |
 
