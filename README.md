@@ -2,28 +2,55 @@
   <img src="docs/images/banner.svg" alt="PsycheLink" width="100%">
 </p>
 
-<h3 align="center">Mental-Health AI Companion<br/>Intent Classification · RAG · Streaming Chat · Risk-Alert Closed Loop</h3>
+<h1 align="center">PsycheLink</h1>
+
+<h3 align="center">Mental-Health AI Companion<br/>
+<sub>Intent Classification · RAG · Streaming Chat · Risk-Alert Closed Loop</sub></h3>
 
 <p align="center">
   <a href="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml"><img src="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/CharlsOliver-kws/Psychelink/releases"><img src="https://img.shields.io/github/v/release/CharlsOliver-kws/Psychelink?color=blue" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.4.3-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot"></a>
-  <a href="https://spring.io/projects/spring-ai"><img src="https://img.shields.io/badge/Spring%20AI-1.0.0-6DB33F?logo=spring&logoColor=white" alt="Spring AI"></a>
-  <a href="https://openjdk.org/"><img src="https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white" alt="Java 17"></a>
-  <a href="https://milvus.io/"><img src="https://img.shields.io/badge/Vector%20DB-Milvus-4ea3ff" alt="Milvus"></a>
+  <img src="https://img.shields.io/github/stars/CharlsOliver-kws/Psychelink?style=social" alt="Stars">
 </p>
 
 <p align="center">
-  <b><a href="README.md">English</a></b> · <a href="README.zh-CN.md">中文</a> · <a href="docs/architecture.md">Architecture</a> · <a href="https://github.com/CharlsOliver-kws/Psychelink/issues">Issues</a>
+  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot"></a>
+  <a href="https://spring.io/projects/spring-ai"><img src="https://img.shields.io/badge/Spring%20AI-1.0.0-6DB33F?logo=spring&logoColor=white" alt="Spring AI"></a>
+  <a href="https://openjdk.org/"><img src="https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white" alt="Java 17"></a>
+  <a href="https://milvus.io/"><img src="https://img.shields.io/badge/Milvus-HNSW-4ea3ff" alt="Milvus"></a>
+  <a href="https://modelcontextprotocol.io/"><img src="https://img.shields.io/badge/MCP-Tools-f5a623" alt="MCP"></a>
+</p>
+
+<p align="center">
+  <b>English</b> · <a href="README.zh-CN.md">中文</a> · <a href="docs/architecture.md">Architecture</a> · <a href="docs/observability.md">Observability</a> · <a href="training/README.md">Fine-tuning</a> · <a href="https://github.com/CharlsOliver-kws/Psychelink/issues">Issues</a>
 </p>
 
 ---
 
 PsycheLink is a mental-health-aware AI companion built with **Spring Boot 3 + Spring AI**. On the surface it's a friendly chat app ("肉包的聊天小站" / Rou-Bao's Chat Corner); under the hood, every message goes through intent classification, RAG retrieval over a professional psychology knowledge base (**Milvus** with HNSW index), streaming response via **SSE**, and **automatic risk detection with email alerts + human review workflow** — a closed loop from *detection* to *intervention*.
 
+<p align="center">
+  <img src="docs/images/demo-chat.svg" alt="PsycheLink demo: intent classification, RAG streaming reply and risk alert" width="92%">
+</p>
+
 > ⚠️ **Disclaimer**: PsycheLink is a technical demo, **not** a medical device and **not** a substitute for professional help. If you or someone you know is in crisis, please contact local emergency services or a crisis hotline immediately.
 
-## How It Works
+## ✨ Features
+
+| | Feature | How it works |
+|---|---|---|
+| 🚀 | **Streaming chat** | `Flux<String>` SSE endpoint (`/api/chat/stream`) — first token rendered in the browser as it arrives |
+| 🔐 | **JWT auth + RBAC** | Stateless tokens, `ROLE_USER` / `ROLE_ADMIN` separation, per-user data isolation |
+| 📚 | **RAG pipeline** | Embedding → Milvus HNSW vector search (Top-3, IP metric) → grounded generation, with graceful degradation |
+| ⚠️ | **Risk closed loop** | Detection → alert email → `RiskEvent` persistence → human review API |
+| 🔌 | **MCP server** | Email & risk-recording tools exposed over Model Context Protocol for external AI clients |
+| 🧠 | **LoRA fine-tuning** | `training/` scripts: dataset prep (cleaning / dedup / class balancing) → SFT → confusion-matrix eval focused on risk recall |
+| 🛡️ | **Never-miss design** | Keyword pre-filter + LLM classification + rule fallback — a RISK message is never silently misclassified as CHAT |
+| 📊 | **Observability** | Full-stack OpenTelemetry tracing via OTel Java Agent |
+| 🔄 | **Endpoint-agnostic** | Works with any OpenAI-compatible LLM endpoint (default: Zhipu GLM) |
+
+## 🏗️ How It Works
 
 ```mermaid
 flowchart LR
@@ -41,22 +68,12 @@ flowchart LR
 ```
 
 - **CHAT** — casual conversation with the "Rou-Bao" persona
-- **CONSULT** — the query is embedded, matched against 101 professional Q&A pairs in Milvus (HNSW, IP metric), and the retrieved knowledge grounds the LLM's answer
-- **RISK** — the message is graded for severity; MEDIUM/HIGH triggers an async alert email (exposed as an MCP tool), a persisted `RiskEvent` record, and an Excel audit log — while the user receives a carefully composed intervention response. Admins review events through a dedicated API, closing the loop.
+- **CONSULT** — the query is embedded and matched against 101 professional Q&A pairs in Milvus; retrieved knowledge grounds the LLM's answer
+- **RISK** — severity grading; MEDIUM/HIGH triggers an async alert email, a persisted `RiskEvent` and an Excel audit log, while the user receives a carefully composed intervention response
 
-## Features
+Details: [docs/architecture.md](docs/architecture.md)
 
-- ✅ **Streaming chat** — `Flux<String>` SSE endpoint (`/api/chat/stream`), first token rendered in the browser as it arrives
-- ✅ **JWT auth + RBAC** — stateless tokens, `ROLE_USER` / `ROLE_ADMIN` separation; users only see their own chat history; admin APIs (risk events, review, MCP endpoint) are admin-only
-- ✅ **RAG pipeline** — embedding → Milvus HNSW vector search → grounded generation, with graceful degradation when Milvus is down
-- ✅ **Risk management closed loop** — detection → alert email (MCP tool) → risk event persistence → human review API
-- ✅ **MCP server** — email & risk-recording tools exposed over Model Context Protocol (`spring-ai-starter-mcp-server-webmvc`) for external AI clients
-- ✅ **LoRA fine-tuning pipeline** — `training/` scripts for dataset preparation (Pandas cleaning / dedup / class balancing) and supervised fine-tuning with confusion-matrix evaluation focused on risk recall
-- ✅ Three-way intent classification with keyword pre-filter + LLM classification + rule fallback (a RISK message is never silently misclassified as CHAT)
-- ✅ Full-stack OpenTelemetry tracing via OTel Java Agent
-- ✅ Works with any OpenAI-compatible LLM endpoint (default: Zhipu GLM)
-
-## Quick Start
+## 🚀 Quick Start
 
 **Prerequisites**: JDK 17, Docker.
 
@@ -65,16 +82,16 @@ flowchart LR
 docker compose up -d
 
 # 2. Configure your keys
-cp .env.example .env    # fill in ZHIPU_API_KEY, MAIL_*, ALERT_RECIPIENT
+cp .env.example .env        # fill in ZHIPU_API_KEY, MAIL_*, ALERT_RECIPIENT
 
 # 3. Run (load env vars first, e.g. `set -a; source .env; set +a` on Linux/macOS)
 ./mvnw spring-boot:run
 ```
 
-Open http://localhost:8088 — register an account and start chatting. The knowledge base auto-imports on first start. An admin account is bootstrapped at startup (set `ADMIN_PASSWORD` in `.env`, or check the log for the generated random password).
+Open **http://localhost:8088** — register an account and start chatting. The knowledge base auto-imports on first start. An admin account is bootstrapped at startup (set `ADMIN_PASSWORD`, or check the log for the generated random password).
 
 <details>
-<summary>Windows (PowerShell)</summary>
+<summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell
 docker compose up -d
@@ -85,27 +102,12 @@ $env:ZHIPU_API_KEY="..."; $env:MAIL_USERNAME="..."; $env:MAIL_PASSWORD="..."; $e
 </details>
 
 <details>
-<summary>Running without Milvus / without an LLM key</summary>
+<summary><b>Running without Milvus / without an LLM key</b></summary>
 
 The app starts anyway — RAG falls back to empty context, LLM calls fail over to keyword-rule responses. Useful for development.
 </details>
 
-## Configuration
-
-All secrets come from environment variables (see [.env.example](.env.example)):
-
-| Variable | Required | Description |
-|---|---|---|
-| `ZHIPU_API_KEY` | ✅ | API key for the LLM provider (Zhipu by default) |
-| `LLM_BASE_URL` | – | Any OpenAI-compatible endpoint |
-| `LLM_MODEL` | – | Default `glm-4.5-air` |
-| `MILVUS_HOST` / `MILVUS_PORT` | – | Default `localhost:19530` |
-| `JWT_SECRET` | – | Strongly recommended in production (≥ 32 bytes) |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | – | Admin bootstrap; random password logged if unset |
-| `MAIL_USERNAME` / `MAIL_PASSWORD` | – | SMTP sender (QQ Mail auth code, not login password) |
-| `ALERT_RECIPIENT` | – | Who receives risk alerts |
-
-## API Overview
+## 📡 API
 
 | Endpoint | Method | Auth | Description |
 |---|---|---|---|
@@ -118,36 +120,61 @@ All secrets come from environment variables (see [.env.example](.env.example)):
 | `/sse` (MCP endpoint) | – | ADMIN | MCP tool server (email / risk recording) |
 | `/swagger-ui.html` | – | – | Interactive API docs (OpenAPI 3) |
 
-## Project Structure
+Errors follow RFC 7807 (`application/problem+json`).
+
+## ⚙️ Configuration
+
+All secrets come from environment variables (template: [.env.example](.env.example)):
+
+| Variable | Required | Description |
+|---|---|---|
+| `ZHIPU_API_KEY` | ✅ | API key for the LLM provider (Zhipu by default) |
+| `LLM_BASE_URL` | – | Any OpenAI-compatible endpoint |
+| `LLM_MODEL` | – | Default `glm-4.5-air` |
+| `MILVUS_HOST` / `MILVUS_PORT` | – | Default `localhost:19530` |
+| `JWT_SECRET` | – | Strongly recommended in production (≥ 32 bytes) |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | – | Admin bootstrap; random password logged if unset |
+| `MAIL_USERNAME` / `MAIL_PASSWORD` | – | SMTP sender (QQ Mail auth code, not login password) |
+| `ALERT_RECIPIENT` | – | Who receives risk alerts |
+
+## 📁 Project Structure
+
+<details>
+<summary><b>Click to expand</b></summary>
 
 ```
 ├── src/main/java/io/github/charlsoliver/psychelink/
-│   ├── config/          # ChatClient, Security (JWT + RBAC), MCP server, data bootstrap
+│   ├── config/          # ChatClient, Security (JWT + RBAC), MCP server, OpenAPI, bootstrap
 │   ├── controller/      # REST endpoints (auth, chat, admin)
 │   ├── security/        # JWT issue/parse + auth filter
 │   ├── dto/             # request/response records
+│   ├── exception/       # global ProblemDetail handler
 │   ├── service/         # ChatService (streaming orchestration), PsychologicalService (intent/risk),
 │   │                    # KnowledgeBaseService + EmbeddingService + MilvusVectorStore (RAG),
 │   │                    # McpEmailService (alert tool), McpExcelService (risk log tool),
 │   │                    # RiskEventService, ChatHistoryService
 │   ├── entity/          # JPA entities (User, ChatMessage, RiskEvent)
 │   └── repository/      # Spring Data JPA
+├── src/test/            # 21 tests incl. end-to-end SSE + RBAC integration
 ├── training/            # dataset prep + LoRA fine-tuning + evaluation (Python)
 └── docs/                # architecture & observability guides
 ```
+</details>
 
-More details: [docs/architecture.md](docs/architecture.md) · Observability guide: [docs/observability.md](docs/observability.md) · Fine-tuning: [training/README.md](training/README.md)
-
-## Roadmap
+## 🗺️ Roadmap
 
 - [ ] Multi-model routing (local Ollama for sensitive processing, cloud API for general chat)
 - [ ] Admin web console for risk-event review
 - [ ] Vector knowledge base management API (add / update / delete)
 
-## Contributing
+## 🤝 Contributing
 
-Issues and PRs are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+Issues and PRs are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Run `./mvnw test` before submitting; tests need no external services.
 
-## License
+## ⭐ Show Your Support
 
-[MIT](LICENSE)
+If this project helped you or inspired you, please give it a ⭐ — it helps more people find it!
+
+## 📄 License
+
+[MIT](LICENSE) © CharlsOliver
