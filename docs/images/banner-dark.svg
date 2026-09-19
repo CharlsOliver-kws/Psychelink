@@ -1,0 +1,21 @@
+<svg width="1600" height="520" viewBox="0 0 1600 520" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark: near-black ink, warm off-white type, single muted gray-blue accent -->
+  <rect width="1600" height="520" fill="#0F1216"/>
+
+  <!-- Mark: two thin interlocking rings — "link", nothing literal -->
+  <g fill="none">
+    <circle cx="778" cy="140" r="30" stroke="#ECEAE5" stroke-width="2.5"/>
+    <circle cx="822" cy="140" r="30" stroke="#8598C2" stroke-width="2.5"/>
+  </g>
+
+  <!-- Title -->
+  <text x="800" y="320" text-anchor="middle" font-family="Segoe UI, Inter, -apple-system, sans-serif"
+        font-size="104" font-weight="600" fill="#ECEAE5" letter-spacing="-2">Psyche<tspan fill="#8E939B">Link</tspan></text>
+
+  <!-- Hairline divider -->
+  <line x1="700" y1="368" x2="900" y2="368" stroke="#262B30" stroke-width="1"/>
+
+  <!-- Subtitle -->
+  <text x="800" y="424" text-anchor="middle" font-family="Segoe UI, Inter, -apple-system, sans-serif"
+        font-size="26" font-weight="400" fill="#98968F" letter-spacing="0.3">Mental-health AI companion&#160;&#160;·&#160;&#160;intent classification&#160;&#160;·&#160;&#160;RAG&#160;&#160;·&#160;&#160;risk alert</text>
+</svg>

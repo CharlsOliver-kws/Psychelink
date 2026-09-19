@@ -1,11 +1,6 @@
 <p align="center">
-  <img src="docs/images/banner.svg" alt="PsycheLink" width="100%">
+  <img src="docs/images/banner-dark.svg" alt="PsycheLink — mental-health AI companion" width="100%">
 </p>
-
-<h1 align="center">PsycheLink</h1>
-
-<h3 align="center">Mental-Health AI Companion<br/>
-<sub>Intent Classification · RAG · Streaming Chat · Risk-Alert Closed Loop</sub></h3>
 
 <p align="center">
   <a href="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml"><img src="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -36,21 +31,21 @@ PsycheLink is a mental-health-aware AI companion built with **Spring Boot 3 + Sp
 
 > ⚠️ **Disclaimer**: PsycheLink is a technical demo, **not** a medical device and **not** a substitute for professional help. If you or someone you know is in crisis, please contact local emergency services or a crisis hotline immediately.
 
-## ✨ Features
+## Features
 
-| | Feature | How it works |
-|---|---|---|
-| 🚀 | **Streaming chat** | `Flux<String>` SSE endpoint (`/api/chat/stream`) — first token rendered in the browser as it arrives |
-| 🔐 | **JWT auth + RBAC** | Stateless tokens, `ROLE_USER` / `ROLE_ADMIN` separation, per-user data isolation |
-| 📚 | **RAG pipeline** | Embedding → Milvus HNSW vector search (Top-3, IP metric) → grounded generation, with graceful degradation |
-| ⚠️ | **Risk closed loop** | Detection → alert email → `RiskEvent` persistence → human review API |
-| 🔌 | **MCP server** | Email & risk-recording tools exposed over Model Context Protocol for external AI clients |
-| 🧠 | **LoRA fine-tuning** | `training/` scripts: dataset prep (cleaning / dedup / class balancing) → SFT → confusion-matrix eval focused on risk recall |
-| 🛡️ | **Never-miss design** | Keyword pre-filter + LLM classification + rule fallback — a RISK message is never silently misclassified as CHAT |
-| 📊 | **Observability** | Full-stack OpenTelemetry tracing via OTel Java Agent |
-| 🔄 | **Endpoint-agnostic** | Works with any OpenAI-compatible LLM endpoint (default: Zhipu GLM) |
+| Feature | How it works |
+|---|---|
+| **Streaming chat** | `Flux<String>` SSE endpoint (`/api/chat/stream`) — first token rendered in the browser as it arrives |
+| **JWT auth + RBAC** | Stateless tokens, `ROLE_USER` / `ROLE_ADMIN` separation, per-user data isolation |
+| **RAG pipeline** | Embedding → Milvus HNSW vector search (Top-3, IP metric) → grounded generation, with graceful degradation |
+| **Risk closed loop** | Detection → alert email → `RiskEvent` persistence → human review API |
+| **MCP server** | Email & risk-recording tools exposed over Model Context Protocol for external AI clients |
+| **LoRA fine-tuning** | `training/` scripts: dataset prep (cleaning / dedup / class balancing) → SFT → confusion-matrix eval focused on risk recall |
+| **Never-miss design** | Keyword pre-filter + LLM classification + rule fallback — a RISK message is never silently misclassified as CHAT |
+| **Observability** | Full-stack OpenTelemetry tracing via OTel Java Agent |
+| **Endpoint-agnostic** | Works with any OpenAI-compatible LLM endpoint (default: Zhipu GLM) |
 
-## 🏗️ How It Works
+## How It Works
 
 ```mermaid
 flowchart LR
@@ -61,7 +56,7 @@ flowchart LR
     IC -->|RISK| RG[Risk Grading<br/>LOW / MEDIUM / HIGH]
     R --> LLM[LLM · GLM-4.5-air]
     RG --> LLM
-    RG -->|MEDIUM / HIGH| A[📧 Alert Email<br/>+ Risk Event]
+    RG -->|MEDIUM / HIGH| A[Alert Email<br/>+ Risk Event]
     P --> LLM
     LLM -->|SSE stream| U
     A --> RV[Admin Review<br/>/api/admin/risk-events]
@@ -73,7 +68,7 @@ flowchart LR
 
 Details: [docs/architecture.md](docs/architecture.md)
 
-## 🚀 Quick Start
+## Quick Start
 
 **Prerequisites**: JDK 17, Docker.
 
@@ -107,7 +102,7 @@ $env:ZHIPU_API_KEY="..."; $env:MAIL_USERNAME="..."; $env:MAIL_PASSWORD="..."; $e
 The app starts anyway — RAG falls back to empty context, LLM calls fail over to keyword-rule responses. Useful for development.
 </details>
 
-## 📡 API
+## API
 
 | Endpoint | Method | Auth | Description |
 |---|---|---|---|
@@ -122,7 +117,7 @@ The app starts anyway — RAG falls back to empty context, LLM calls fail over t
 
 Errors follow RFC 7807 (`application/problem+json`).
 
-## ⚙️ Configuration
+## Configuration
 
 All secrets come from environment variables (template: [.env.example](.env.example)):
 
@@ -137,7 +132,7 @@ All secrets come from environment variables (template: [.env.example](.env.examp
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | – | SMTP sender (QQ Mail auth code, not login password) |
 | `ALERT_RECIPIENT` | – | Who receives risk alerts |
 
-## 📁 Project Structure
+## Project Structure
 
 <details>
 <summary><b>Click to expand</b></summary>
@@ -161,20 +156,20 @@ All secrets come from environment variables (template: [.env.example](.env.examp
 ```
 </details>
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] Multi-model routing (local Ollama for sensitive processing, cloud API for general chat)
 - [ ] Admin web console for risk-event review
 - [ ] Vector knowledge base management API (add / update / delete)
 
-## 🤝 Contributing
+## Contributing
 
 Issues and PRs are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Run `./mvnw test` before submitting; tests need no external services.
 
-## ⭐ Show Your Support
+## Show Your Support
 
 If this project helped you or inspired you, please give it a ⭐ — it helps more people find it!
 
-## 📄 License
+## License
 
 [MIT](LICENSE) © CharlsOliver

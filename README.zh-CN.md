@@ -1,11 +1,6 @@
 <p align="center">
-  <img src="docs/images/banner.svg" alt="PsycheLink" width="100%">
+  <img src="docs/images/banner-dark.svg" alt="PsycheLink — 心理健康 AI 陪伴助手" width="100%">
 </p>
-
-<h1 align="center">PsycheLink</h1>
-
-<h3 align="center">心理健康 AI 陪伴助手<br/>
-<sub>意图识别 · RAG 检索增强 · 流式对话 · 风险预警闭环</sub></h3>
 
 <p align="center">
   <a href="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml"><img src="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -36,21 +31,21 @@ PsycheLink 是一个基于 **Spring Boot 3 + Spring AI** 构建的心理健康 A
 
 > ⚠️ **免责声明**：PsycheLink 是一个技术演示项目，**不是**医疗设备，也**不能**替代专业心理帮助。如果你或你身边的人正处于危机中，请立即联系当地紧急服务或心理援助热线。
 
-## ✨ 功能特性
+## 功能特性
 
-| | 特性 | 实现方式 |
-|---|---|---|
-| 🚀 | **流式对话** | `Flux<String>` SSE 接口（`/api/chat/stream`），首个 Token 到达即开始渲染 |
-| 🔐 | **JWT 认证 + RBAC** | 无状态令牌，`ROLE_USER` / `ROLE_ADMIN` 权限隔离，用户数据级隔离 |
-| 📚 | **RAG 管线** | 向量化 → Milvus HNSW 相似检索（Top-3，IP 度量）→ 知识增强生成，可优雅降级 |
-| ⚠️ | **风险闭环** | 识别 → 预警邮件 → 风险事件落库 → 人工复核接口 |
-| 🔌 | **MCP Server** | 邮件与风险记录工具通过 Model Context Protocol 暴露给外部 AI 客户端 |
-| 🧠 | **LoRA 微调管线** | `training/`：数据准备（清洗 / 去重 / 类别均衡）→ SFT → 混淆矩阵评估（重点检查风险漏报率） |
-| 🛡️ | **绝不漏判设计** | 关键词初筛 + LLM 分类 + 规则兜底，RISK 消息绝不会被静默误判为 CHAT |
-| 📊 | **可观测性** | OpenTelemetry 全链路 Trace（OTel Java Agent） |
-| 🔄 | **端点无关** | 兼容任意 OpenAI 协议端点（默认智谱 GLM） |
+| 特性 | 实现方式 |
+|---|---|
+| **流式对话** | `Flux<String>` SSE 接口（`/api/chat/stream`），首个 Token 到达即开始渲染 |
+| **JWT 认证 + RBAC** | 无状态令牌，`ROLE_USER` / `ROLE_ADMIN` 权限隔离，用户数据级隔离 |
+| **RAG 管线** | 向量化 → Milvus HNSW 相似检索（Top-3，IP 度量）→ 知识增强生成，可优雅降级 |
+| **风险闭环** | 识别 → 预警邮件 → 风险事件落库 → 人工复核接口 |
+| **MCP Server** | 邮件与风险记录工具通过 Model Context Protocol 暴露给外部 AI 客户端 |
+| **LoRA 微调管线** | `training/`：数据准备（清洗 / 去重 / 类别均衡）→ SFT → 混淆矩阵评估（重点检查风险漏报率） |
+| **绝不漏判设计** | 关键词初筛 + LLM 分类 + 规则兜底，RISK 消息绝不会被静默误判为 CHAT |
+| **可观测性** | OpenTelemetry 全链路 Trace（OTel Java Agent） |
+| **端点无关** | 兼容任意 OpenAI 协议端点（默认智谱 GLM） |
 
-## 🏗️ 工作原理
+## 工作原理
 
 ```mermaid
 flowchart LR
@@ -61,7 +56,7 @@ flowchart LR
     IC -->|RISK| RG[风险分级<br/>LOW / MEDIUM / HIGH]
     R --> LLM[大模型 · GLM-4.5-air]
     RG --> LLM
-    RG -->|MEDIUM / HIGH| A[📧 预警邮件<br/>+ 风险事件]
+    RG -->|MEDIUM / HIGH| A[预警邮件<br/>+ 风险事件]
     P --> LLM
     LLM -->|SSE 流式| U
     A --> RV[管理员复核<br/>/api/admin/risk-events]
@@ -73,7 +68,7 @@ flowchart LR
 
 更多细节：[docs/architecture.md](docs/architecture.md)
 
-## 🚀 快速开始
+## 快速开始
 
 **环境要求**：JDK 17、Docker。
 
@@ -107,7 +102,7 @@ $env:ZHIPU_API_KEY="..."; $env:MAIL_USERNAME="..."; $env:MAIL_PASSWORD="..."; $e
 应用照常启动 —— RAG 降级为空上下文，LLM 调用失败时回退关键词规则回复。适合本地开发调试。
 </details>
 
-## 📡 API 一览
+## API 一览
 
 | 接口 | 方法 | 权限 | 说明 |
 |---|---|---|---|
@@ -122,7 +117,7 @@ $env:ZHIPU_API_KEY="..."; $env:MAIL_USERNAME="..."; $env:MAIL_PASSWORD="..."; $e
 
 错误响应统一遵循 RFC 7807（`application/problem+json`）。
 
-## ⚙️ 配置项
+## 配置项
 
 所有密钥均来自环境变量（模板见 [.env.example](.env.example)）：
 
@@ -137,7 +132,7 @@ $env:ZHIPU_API_KEY="..."; $env:MAIL_USERNAME="..."; $env:MAIL_PASSWORD="..."; $e
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | – | SMTP 发件邮箱（QQ 邮箱为授权码，非登录密码） |
 | `ALERT_RECIPIENT` | – | 风险预警接收邮箱 |
 
-## 📁 项目结构
+## 项目结构
 
 <details>
 <summary><b>点击展开</b></summary>
@@ -161,20 +156,20 @@ $env:ZHIPU_API_KEY="..."; $env:MAIL_USERNAME="..."; $env:MAIL_PASSWORD="..."; $e
 ```
 </details>
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] 多模型动态路由（敏感处理走本地 Ollama，通用问答走云端 API）
 - [ ] 管理端 Web 控制台（风险事件复核界面）
 - [ ] 知识库管理接口（增 / 删 / 改）
 
-## 🤝 参与贡献
+## 参与贡献
 
 欢迎提交 Issue 和 PR，见 [CONTRIBUTING.md](CONTRIBUTING.md)。提交前请运行 `./mvnw test`（测试无需外部服务）。
 
-## ⭐ 支持一下
+## 支持一下
 
 如果这个项目对你有帮助或启发，欢迎点一个 ⭐ Star —— 这能让更多人看到它！
 
-## 📄 开源协议
+## 开源协议
 
 [MIT](LICENSE) © CharlsOliver
