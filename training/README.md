@@ -72,5 +72,5 @@ python evaluate.py --model checkpoints/glm-crisis-lora \
 
 ## 与 Java 服务的配合
 
-微调后的分类器在推理侧由 [PsychologicalService](../src/main/java/com/psychic/agent/service/PsychologicalService.java) 的规则引擎兜底：
+微调后的分类器在推理侧由 [PsychologicalService](../src/main/java/io/github/charlsoliver/psychelink/service/PsychologicalService.java) 的规则引擎兜底：
 服务端优先使用关键词规则 + LLM 意图识别，离线微调模型用于批量评估与规则调优（见 `evaluate.py` 输出的混淆矩阵，用于补充 `HIGH_RISK_KEYWORDS` 关键词表）。

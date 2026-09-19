@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>io.github.charlsoliver</groupId>
 	<artifactId>psychelink</artifactId>
-	<version>0.2.0-SNAPSHOT</version>
+	<version>0.2.0</version>
 	<name>PsycheLink</name>
 	<description>PsycheLink - 心理健康 AI 陪伴助手：意图识别 + RAG 检索增强 + 风险预警</description>
 	<properties>
@@ -18,6 +18,7 @@
 		<spring-ai.version>1.0.0</spring-ai.version>
 		<jjwt.version>0.12.6</jjwt.version>
 		<milvus-sdk.version>2.5.4</milvus-sdk.version>
+		<springdoc.version>2.8.6</springdoc.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<maven.compiler.source>17</maven.compiler.source>
@@ -118,6 +119,13 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 			<version>5.2.5</version>
+		</dependency>
+
+		<!-- API 文档（OpenAPI 3 + Swagger UI） -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
 		</dependency>
 
 		<!-- Lombok -->

@@ -1,0 +1,54 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="100%" stop-color="#764ba2"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#667eea" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#667eea" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="300" fill="url(#bg)"/>
+  <circle cx="1050" cy="60" r="200" fill="url(#glow)"/>
+  <circle cx="120" cy="260" r="160" fill="url(#glow)"/>
+  <rect x="0" y="0" width="1200" height="6" fill="url(#accent)"/>
+  <rect x="0" y="294" width="1200" height="6" fill="url(#accent)"/>
+
+  <!-- Brain logo -->
+  <g transform="translate(90, 75) scale(2.2)">
+    <text x="0" y="40" font-size="56">🧠</text>
+  </g>
+
+  <!-- Title -->
+  <text x="250" y="140" font-family="Segoe UI, -apple-system, sans-serif" font-size="64" font-weight="700" fill="#ffffff">
+    Psyche<tspan fill="#8b9cf5">Link</tspan>
+  </text>
+  <text x="252" y="185" font-family="Segoe UI, -apple-system, sans-serif" font-size="26" fill="#a8b2d1">
+    Mental-Health AI Companion · Intent Classification · RAG · Risk Alert
+  </text>
+
+  <!-- Tech stack tags -->
+  <g font-family="Consolas, monospace" font-size="17" font-weight="600">
+    <rect x="252" y="212" rx="13" ry="13" width="128" height="30" fill="#6DB33F" fill-opacity="0.18" stroke="#6DB33F" stroke-opacity="0.6"/>
+    <text x="288" y="233" fill="#8fd462" text-anchor="middle">Spring Boot 3</text>
+
+    <rect x="392" y="212" rx="13" ry="13" width="110" height="30" fill="#6DB33F" fill-opacity="0.18" stroke="#6DB33F" stroke-opacity="0.6"/>
+    <text x="447" y="233" fill="#8fd462" text-anchor="middle">Spring AI</text>
+
+    <rect x="514" y="212" rx="13" ry="13" width="92" height="30" fill="#4ea3ff" fill-opacity="0.18" stroke="#4ea3ff" stroke-opacity="0.6"/>
+    <text x="560" y="233" fill="#7cbcff" text-anchor="middle">Milvus</text>
+
+    <rect x="618" y="212" rx="13" ry="13" width="80" height="30" fill="#f5a623" fill-opacity="0.18" stroke="#f5a623" stroke-opacity="0.6"/>
+    <text x="658" y="233" fill="#ffc45e" text-anchor="middle">MCP</text>
+
+    <rect x="710" y="212" rx="13" ry="13" width="96" height="30" fill="#667eea" fill-opacity="0.18" stroke="#667eea" stroke-opacity="0.6"/>
+    <text x="758" y="233" fill="#8b9cf5" text-anchor="middle">OpenAI API</text>
+  </g>
+</svg>

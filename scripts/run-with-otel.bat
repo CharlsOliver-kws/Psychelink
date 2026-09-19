@@ -16,7 +16,7 @@ if "%OTEL_EXPORTER_ENDPOINT%"=="" (
     echo [WARN] 未设置 OTEL_EXPORTER_ENDPOINT，将不启用 OTel 上报，仅本地启动
 )
 
-set JAR=target\psychelink-0.2.0-SNAPSHOT.jar
+set JAR=target\psychelink-0.2.0.jar
 if not exist "%JAR%" (
     echo [INFO] 未找到 %JAR%，先执行打包: mvnw.cmd clean package -DskipTests
     call mvnw.cmd clean package -DskipTests || exit /b 1

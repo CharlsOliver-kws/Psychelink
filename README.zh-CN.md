@@ -1,12 +1,23 @@
-# PsycheLink 🧠
+<p align="center">
+  <img src="docs/images/banner.svg" alt="PsycheLink" width="100%">
+</p>
 
-[![CI](https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml/badge.svg)](https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.3-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Spring AI](https://img.shields.io/badge/Spring%20AI-1.0.0-6DB33F?logo=spring&logoColor=white)](https://spring.io/projects/spring-ai)
-[![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white)](https://openjdk.org/)
+<h3 align="center">心理健康 AI 陪伴助手<br/>意图识别 · RAG 检索增强 · 流式对话 · 风险预警闭环</h3>
 
-中文 | **[English](README.md)**
+<p align="center">
+  <a href="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml"><img src="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.4.3-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot"></a>
+  <a href="https://spring.io/projects/spring-ai"><img src="https://img.shields.io/badge/Spring%20AI-1.0.0-6DB33F?logo=spring&logoColor=white" alt="Spring AI"></a>
+  <a href="https://openjdk.org/"><img src="https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white" alt="Java 17"></a>
+  <a href="https://milvus.io/"><img src="https://img.shields.io/badge/Vector%20DB-Milvus-4ea3ff" alt="Milvus"></a>
+</p>
+
+<p align="center">
+  <a href="README.md">English</a> · <b><a href="README.zh-CN.md">中文</a></b> · <a href="docs/architecture.md">架构说明</a> · <a href="https://github.com/CharlsOliver-kws/Psychelink/issues">Issues</a>
+</p>
+
+---
 
 PsycheLink 是一个基于 **Spring Boot 3 + Spring AI** 构建的心理健康 AI 陪伴助手。表面上它是一个友好的聊天应用（「肉包的聊天小站」）；实际上，每条消息都会经过意图识别、基于 **Milvus**（HNSW 索引）心理知识库的 RAG 检索、**SSE 流式**响应，以及**风险自动检测 + 邮件预警 + 人工复核** —— 构成从「识别」到「干预」的完整闭环。
 
@@ -105,11 +116,12 @@ $env:ZHIPU_API_KEY="..."; $env:MAIL_USERNAME="..."; $env:MAIL_PASSWORD="..."; $e
 | `/api/admin/risk-events` | GET | ADMIN | 风险事件列表，可按复核状态过滤 |
 | `/api/admin/risk-events/{id}/review` | PUT | ADMIN | 人工复核：确认 + 处理意见 |
 | `/sse`（MCP 端点） | – | ADMIN | MCP 工具服务（邮件 / 风险记录） |
+| `/swagger-ui.html` | – | – | 交互式 API 文档（OpenAPI 3） |
 
 ## 项目结构
 
 ```
-├── src/main/java/com/psychic/agent/
+├── src/main/java/io/github/charlsoliver/psychelink/
 │   ├── config/          # ChatClient、Security（JWT + RBAC）、MCP Server、数据初始化
 │   ├── controller/      # REST 接口（认证、对话、管理端）
 │   ├── security/        # JWT 签发/解析 + 认证过滤器

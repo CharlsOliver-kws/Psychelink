@@ -1,12 +1,23 @@
-# PsycheLink 🧠
+<p align="center">
+  <img src="docs/images/banner.svg" alt="PsycheLink" width="100%">
+</p>
 
-[![CI](https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml/badge.svg)](https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.3-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Spring AI](https://img.shields.io/badge/Spring%20AI-1.0.0-6DB33F?logo=spring&logoColor=white)](https://spring.io/projects/spring-ai)
-[![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white)](https://openjdk.org/)
+<h3 align="center">Mental-Health AI Companion<br/>Intent Classification · RAG · Streaming Chat · Risk-Alert Closed Loop</h3>
 
-**[中文文档](README.zh-CN.md)** | English
+<p align="center">
+  <a href="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml"><img src="https://github.com/CharlsOliver-kws/Psychelink/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.4.3-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot"></a>
+  <a href="https://spring.io/projects/spring-ai"><img src="https://img.shields.io/badge/Spring%20AI-1.0.0-6DB33F?logo=spring&logoColor=white" alt="Spring AI"></a>
+  <a href="https://openjdk.org/"><img src="https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white" alt="Java 17"></a>
+  <a href="https://milvus.io/"><img src="https://img.shields.io/badge/Vector%20DB-Milvus-4ea3ff" alt="Milvus"></a>
+</p>
+
+<p align="center">
+  <b><a href="README.md">English</a></b> · <a href="README.zh-CN.md">中文</a> · <a href="docs/architecture.md">Architecture</a> · <a href="https://github.com/CharlsOliver-kws/Psychelink/issues">Issues</a>
+</p>
+
+---
 
 PsycheLink is a mental-health-aware AI companion built with **Spring Boot 3 + Spring AI**. On the surface it's a friendly chat app ("肉包的聊天小站" / Rou-Bao's Chat Corner); under the hood, every message goes through intent classification, RAG retrieval over a professional psychology knowledge base (**Milvus** with HNSW index), streaming response via **SSE**, and **automatic risk detection with email alerts + human review workflow** — a closed loop from *detection* to *intervention*.
 
@@ -105,11 +116,12 @@ All secrets come from environment variables (see [.env.example](.env.example)):
 | `/api/admin/risk-events` | GET | ADMIN | Risk events, filterable by review status |
 | `/api/admin/risk-events/{id}/review` | PUT | ADMIN | Human review: confirm + note |
 | `/sse` (MCP endpoint) | – | ADMIN | MCP tool server (email / risk recording) |
+| `/swagger-ui.html` | – | – | Interactive API docs (OpenAPI 3) |
 
 ## Project Structure
 
 ```
-├── src/main/java/com/psychic/agent/
+├── src/main/java/io/github/charlsoliver/psychelink/
 │   ├── config/          # ChatClient, Security (JWT + RBAC), MCP server, data bootstrap
 │   ├── controller/      # REST endpoints (auth, chat, admin)
 │   ├── security/        # JWT issue/parse + auth filter

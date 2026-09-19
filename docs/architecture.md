@@ -42,7 +42,7 @@ flowchart TD
 ## 分层结构
 
 ```
-src/main/java/com/psychic/agent/
+src/main/java/io/github/charlsoliver/psychelink/
 ├── config/        # ChatClientConfig、SecurityConfig（JWT + RBAC）、McpConfig、DataInitializer
 ├── controller/    # AuthController（注册/登录）、ChatController（流式对话/历史）、AdminController（风险事件/复核）
 ├── security/      # JwtService（签发/解析）、JwtAuthFilter
